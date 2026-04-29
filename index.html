@@ -322,7 +322,7 @@
         Object.keys(CATEGORIES).forEach(key => {
           const stored = localStorage.getItem('pei_' + key);
           state.data[key] = stored ? JSON.parse(stored) : [];
-          state.data[key] = [...new Set(state.data[key])].sort((a, b) => a.localeCompare(b));
+          state.data[key] = [...new Set(state.data[key])].sort((a, b) => String(a).localeCompare(String(b)));
         });
         const storedPlanos = localStorage.getItem('pei_planos');
         state.planos = storedPlanos ? JSON.parse(storedPlanos) : [];
