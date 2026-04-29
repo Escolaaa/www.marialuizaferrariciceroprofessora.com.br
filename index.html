@@ -336,16 +336,20 @@
 
     function saveCategory(key) { 
       try {
-        localStorage.setItem('pei_' + key, JSON.stringify(state.data[key]));
+        const dataStr = JSON.stringify(state.data[key]);
+        localStorage.setItem('pei_' + key, dataStr);
       } catch (e) {
-        showToast('Erro: Memória cheia. Tente remover planos antigos.', 'error');
+        console.error('LocalStorage Error:', e);
+        showToast('Erro: Limite de memória atingido ao salvar cadastros.', 'error');
       }
     }
     function savePlanos() { 
       try {
-        localStorage.setItem('pei_planos', JSON.stringify(state.planos)); 
+        const planosStr = JSON.stringify(state.planos);
+        localStorage.setItem('pei_planos', planosStr); 
       } catch (e) {
-        showToast('Erro ao salvar planos. Limite excedido.', 'error');
+        console.error('LocalStorage Error:', e);
+        showToast('Erro: Limite de memória atingido. Exclua planos antigos.', 'error');
       }
     }
     function saveDraft() { const data = collectFormData(); if (data.professor || data.disciplina || data.dataInicio) localStorage.setItem('pei_draft', JSON.stringify(data)); }
@@ -355,7 +359,7 @@
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const tab = btn.dataset.tab;
-          if ((tab === 'cadastros') && !state.isGestao) { state.pendingTab = tab; openLoginModal(); return; }
+          if ((tab === 'cadastros' || tab === 'planos-salvos') && !state.isGestao) { state.pendingTab = tab; openLoginModal(); return; }
           switchTab(tab);
         });
       });
@@ -526,7 +530,7 @@
       const normalizedQuery = (query || '').trim().toLowerCase();
       const items = state.data[key].filter(item => item.toLowerCase().includes(normalizedQuery));
       counter.textContent = `${tempSelected.length} selecionado${tempSelected.length === 1 ? '' : 's'}`;
-      list.innerHTML = '';
+      
       if (!state.data[key].length) {
         list.innerHTML = `<div class="selection-empty"><i class="fas fa-inbox"></i><br>Nenhum item cadastrado em ${CATEGORIES[key].label}.</div>`;
         return;
@@ -535,6 +539,8 @@
         list.innerHTML = '<div class="selection-empty"><i class="fas fa-search"></i><br>Nenhum item encontrado para a busca.</div>';
         return;
       }
+
+      const fragment = document.createDocumentFragment();
       items.forEach(item => {
         const selected = tempSelected.includes(item);
         const option = document.createElement('div');
@@ -545,8 +551,10 @@
         option.innerHTML = `<span class="selection-check"><i class="fas fa-check"></i></span><span>${escapeHtml(item)}</span>`;
         option.onclick = () => toggleSelectionModalItem(item);
         option.onkeydown = (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleSelectionModalItem(item); } };
-        list.appendChild(option);
+        fragment.appendChild(option);
       });
+      list.innerHTML = '';
+      list.appendChild(fragment);
     }
 
     function toggleSelectionModalItem(item) {
